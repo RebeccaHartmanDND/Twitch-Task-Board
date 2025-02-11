@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+body {
+    background-color: transparent; /* Invisible background */
+    font-family: 'Press Start 2P', cursive;
+    color: rgb(0, 0, 0);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Ensures the body takes up the full height of the viewport */
+    margin: 0;
+    flex-direction: column; /* Stack the elements vertically */
+}
+
+#taskBoardContainer {
+    min-width: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.taskBoardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px;
+    border-radius: 5px;
+    background: rgb(255, 255, 255); /* More transparent background */
+    margin-bottom: 3px;
+}
+
+#completedTasks {
+    top: -20px;
+    /* Make sure it's not crammed into a small box */
+    flex: 2;  /* Allow it to take more space within a flex container */
+    width: auto;  /* Auto width, let it grow as needed */
+    max-width: 400px;  /* Set a max-width to avoid it growing too large */
+    font-size: 10px;
+    border-radius: 5px;
+    word-wrap: break-word;  /* Ensure long text breaks properly */
+    text-align: center;  /* Align text to the left */
+    margin-right: 10px;  /* Optional: Add a small margin to the right for spacing */
+}
+
+#completedTasks {
+    white-space: pre-line;
+    line-height: 1.8;  /* Adjust spacing as needed */
+}
+
+
+br {
+    line-height: normal;
+}
+
+#userCommands {
+    min-width: 200px;
+    margin-top: 10px;
+    flex: 2;
+    text-align: right;
+    font-size: 10px;
+    font-weight: bold;
+    white-space: pre-line;
+    line-height: 0.7;  /* Adjust spacing as needed */
+}
+
+#userCommands p {
+    margin: 0;
+    margin-left: -20px;
+    padding: 0;
+}
+
+#currentCommand {
+    font-size: 10px;
+    color: black;
+    font-weight: 400px;
+}
+
+
+#taskBoardContainer {
+    width: 300px;
+    height: 400px;
+    border-radius: 10px;
+    padding: 10px;
+    overflow-y: hidden;  /* Enable vertical scrolling */
+    position: relative;
+}
+
+
+/* Task List (Tasks will scroll vertically here) */
+#taskBoard {
+    flex: 1;  /* Takes remaining space in container */
+    padding-right: 0px;  /* Prevents scrollbar overlap on the right */
+}
+
+
+/* Hide scrollbar in Webkit browsers */
+#taskBoard::-webkit-scrollbar {
+    width: 0px;  /* Hide the scrollbar */
+    height: 0px;
+}
+
+/* For older versions of IE and Edge */
+#taskBoard {
+    -ms-overflow-style: none;  /* Hides the scrollbar */
+}
+
+/* For Firefox */
+#taskBoard {
+    scrollbar-width: none; /* Hides scrollbar */
+}
+
+
+.user-section {
+    margin-bottom: 0px;
+    padding-bottom: 0px;  /* Ensure no extra padding */
+    display: flex;
+    flex-direction: column;
+    gap: 3px;  /* Ensures consistent spacing between elements */
+}
+
+.user-section h3 {
+    font-weight: 400;  /* Regular weight to prevent blurriness */
+    font-size: 14px;
+    background: rgb(255, 255, 255); /* More transparent background */
+    padding: 5px;
+    border-radius: 5px;
+    word-wrap: break-word;
+    margin: 0;
+}
+
+.task-item {
+    background: rgb(255, 255, 255); /* More transparent background */
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 400;  /* Lighter weight for clarity */
+    word-wrap: break-word;
+    margin: 0;
+    margin-left: 10px;
+}
+
+
+
+
+.current-task {
+    font-weight: bold;
+    color: #ffa600; /* Orange or any color you prefer */
+}
+
+.finished-task {
+    text-decoration: line-through;
+    color: grey;
+}
