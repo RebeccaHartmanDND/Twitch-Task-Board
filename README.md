@@ -32,7 +32,7 @@ Make sure you have the following:
 To get started, clone this repository:
 
 ```bash
-git clone https://github.com/your-username/misery-task-board.git
+git clone https://github.com/RebeccaHartmanDND/misery-task-board.git
 ```
 
 ### Setup
