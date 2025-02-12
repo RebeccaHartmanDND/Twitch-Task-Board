@@ -8,6 +8,8 @@ Welcome to **Misery Task-Board**, a browser-based task management tool designed 
 - **Task Progress**: Track your tasks, mark them as completed, and manage ongoing tasks.
 - **Cycling Commands**: Displays chat commands every few seconds for easy reference.
 - **User-Specific and Moderator Commands**: Users can manage their own tasks, while moderators can manage all users' tasks.
+- **Auto-scrolling Task Board**: Automatically scrolls the task board to stay up-to-date with tasks, ensuring smooth viewing.
+- **Completed Tasks Counter**: Displays the number of completed tasks out of the total.
 
 ## Table of Contents
 
@@ -60,8 +62,9 @@ Once the task board is set up, users can manage their tasks using Twitch chat co
 - `!done {index}`: Marks a task as completed. Example: `!done 1`.
 - `!start {index}`: Starts working on a specific task. Example: `!start 1`.
 - `!edit {index} {new task name}`: Edit a task. Example: `!edit 1 Take out trash`.
-- `!removedone`: Removes all finished tasks.
 - `!tbhelp`: Displays a list of user commands.
+- `!check`: Displays unfinished tasks for the user.
+- `!clear`: Removes all finished tasks for the user.
 
 ### Moderator Commands
 
@@ -76,6 +79,10 @@ Moderators have additional control over all users' tasks.
 ### Cycling Commands
 
 The task board will cycle through available commands every 5 seconds for users to easily reference. This feature can be enabled or disabled by modifying the JavaScript configuration.
+
+### Auto-Scroll
+
+The task board includes an auto-scrolling feature that ensures the task board remains easy to follow. It scrolls up and down to ensure a smooth user experience, automatically adjusting to the task list.
 
 ## Customization
 
