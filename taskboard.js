@@ -16,6 +16,8 @@ client.connect().catch(console.error);
 
 let tasks = {};
 
+
+
 // Load tasks from localStorage on page load
 window.onload = function () {
     const savedTasks = localStorage.getItem("tasks");
@@ -31,7 +33,8 @@ window.onload = function () {
         "`!remove {index}`",
         "`!done {index}`",
         "`!edit {index} {task}`",
-        "`!removedone`"
+        "`!check`",
+        "`!clear`"
     ];
     
     let currentCommandIndex = 0;
@@ -70,8 +73,9 @@ client.on("message", (channel, tags, message, self) => {
         newTasks.forEach(task => tasks[username].push({ text: task, finished: false }));
         client.say(channel, `@${username}, added tasks: ${newTasks.join(", ")}`);
         saveTasks();
-        updateTaskBoard();
+        updateTaskBoard(); // Update task board and manage scroll
     }
+    
 
     else if (command === "!remove" && args.length === 1) {
         let index = parseInt(args[0]) - 1;
@@ -79,46 +83,52 @@ client.on("message", (channel, tags, message, self) => {
             tasks[username].splice(index, 1);
             client.say(channel, `@${username}, removed task #${index + 1}`);
             saveTasks();
-            updateTaskBoard();
+            updateTaskBoard(); // Update task board and manage scroll
         }
     }
+    
     else if (command === "!done") {
-        let index = args.length === 1 ? parseInt(args[0]) - 1 : -1; 
+        let index = args.length === 1 ? parseInt(args[0]) - 1 : -1;
     
         if (tasks[username]) {
             if (index >= 0 && tasks[username][index]) {
+                // Mark the specified task as finished
+                const taskName = tasks[username][index].text;
                 tasks[username][index].finished = true;
                 tasks[username][index].current = false;  // Remove current status when marking done
-                client.say(channel, `@${username}, marked task #${index + 1} as finished.`);
+                client.say(channel, `@${username}, marked task: "${taskName}" as finished.`);
             } else {
                 let foundUnfinishedTask = false;
                 for (let i = 0; i < tasks[username].length; i++) {
                     if (!tasks[username][i].finished) {
+                        const taskName = tasks[username][i].text;
                         tasks[username][i].finished = true;
                         tasks[username][i].current = false;  // Remove current status when marking done
-                        client.say(channel, `@${username}, marked your first unfinished task (#${i + 1}) as finished.`);
+                        client.say(channel, `@${username}, marked your first unfinished task: "${taskName}" as finished.`);
                         foundUnfinishedTask = true;
                         break;
                     }
                 }
-
+    
                 if (!foundUnfinishedTask) {
                     client.say(channel, `@${username}, all your tasks are already finished!`);
                 }
             }
-
+    
             // After marking a task as done, set the first unfinished task as the current one
             const nextTask = tasks[username].find(task => !task.finished);
             if (nextTask) {
                 nextTask.current = true;
             }
-
+    
             saveTasks();
-            updateTaskBoard();
+            updateTaskBoard(); // Update task board and manage scroll
         } else {
             client.say(channel, `@${username}, you have no tasks to mark as finished.`);
         }
     }
+    
+    
 
     // !start command
     else if (command === "!start" && args.length === 1) {
@@ -137,8 +147,11 @@ client.on("message", (channel, tags, message, self) => {
         }
     }
 
+    
+
+
 // !removedone command (user-specific) - Remove all finished tasks
-else if (command === "!removedone" && args.length === 0) {
+else if (command === "!clear" && args.length === 0) {
     if (tasks[username]) {
         // Filter out finished tasks
         const initialTaskCount = tasks[username].length;
@@ -152,80 +165,107 @@ else if (command === "!removedone" && args.length === 0) {
         }
 
         saveTasks();
-        updateTaskBoard();
+        updateTaskBoard(); // Update task board and manage scroll
     } else {
         client.say(channel, `@${username}, you have no tasks.`);
     }
 }
 
+else if (command === "!clearalldone" && args.length === 0) {
+    if (tags.mod || tags.badges?.broadcaster) { // Check if user is mod or broadcaster
+        let tasksCleared = false;
 
-    // !removedoneall command (mod/streamer only)
-    else if (command === "!removedoneall" && args.length === 1) {
-        if (tags.mod || channel.replace("#", "") === username) {
-            let userToClear = args[0].toLowerCase();
-            if (tasks[userToClear]) {
-                tasks[userToClear].forEach(task => {
-                    task.finished = false; // Reset all tasks to unfinished
-                });
-                client.say(channel, `@${userToClear}, all tasks are now marked as unfinished.`);
-                saveTasks();
-                updateTaskBoard();
-            } else {
-                client.say(channel, `@${username}, no tasks found for @${userToClear}.`);
-            }
-        } else {
-            client.say(channel, `@${username}, you don't have permission to use this command.`);
-        }
-    }
+        // Loop through all users and remove finished tasks
+        for (let user in tasks) {
+            if (tasks[user]) {
+                let initialTaskCount = tasks[user].length;
 
-    else if (command === "!tbhelp") {
-        client.say(channel, `User Commands:
-        \`!add {task}\` - Add a new task. |
-        \`!remove {index}\` - Remove a task by its number. |
-        \`!done {index}\` - Mark a task as done. |
-        \`!start {index}\` - Start working on a specific task. |
-        \`!edit {index} {new task name}\` - Edit a task's name. |
-        \`!removedone\` - Remove all finished tasks for you. |`);
-    }
-    
-    else if (command === "!tbhelpmod") {
-        client.say(channel, `Moderator & Streamer Commands:
-        \`!removedoneall {username}\` - Remove all finished tasks for a user. |
-        \`!clearalltasks\` - Clear all tasks for everyone. |
-        \`!cleartasksuser {username}\` - Clear all tasks for a specific user. |
-        \`!removeusertask {username} {index}\` - Remove a specific task from a user.`);
-    }
-    
+                // Remove finished tasks
+                tasks[user] = tasks[user].filter(task => !task.finished);
 
+                // Check if tasks were actually removed
+                if (tasks[user].length < initialTaskCount) {
+                    tasksCleared = true;
+                }
 
-    
-
-    else if (["!clearalltasks", "!cleartasksuser", "!removeusertask"].includes(command)) {
-        if (tags.mod || channel.replace("#", "") === username) {
-            if (command === "!clearalltasks") {
-                tasks = {};
-                client.say(channel, `All tasks cleared.`);
-            } else if (command === "!cleartasksuser" && args.length === 1) {
-                let userToClear = args[0].toLowerCase();
-                delete tasks[userToClear];
-                client.say(channel, `Cleared all tasks for @${userToClear}.`);
-            } else if (command === "!removeusertask" && args.length === 2) {
-                let userToEdit = args[0].toLowerCase();
-                let index = parseInt(args[1]) - 1;
-                if (tasks[userToEdit] && tasks[userToEdit][index]) {
-                    tasks[userToEdit].splice(index, 1);
-                    client.say(channel, `Removed task #${index + 1} for @${userToEdit}.`);
+                // Remove user from tasks if they have no remaining tasks
+                if (tasks[user].length === 0) {
+                    delete tasks[user];
                 }
             }
-            saveTasks();
-            updateTaskBoard();
-        } else {
-            client.say(channel, `@${username}, you don't have permission to use this command.`);
         }
+
+        // Notify once instead of spamming chat
+        if (tasksCleared) {
+            client.say(channel, `@${tags.username}, all finished tasks have been cleared!`);
+        } else {
+            client.say(channel, `No finished tasks were found to clear.`);
+        }
+
+        saveTasks(); // Save updated tasks
+        updateTaskBoard(); // Update task board
+    } else {
+        client.say(channel, `@${tags.username}, you don't have permission to use this command.`);
     }
+}
 
 
-// Inside the message listener for '!edit' command
+
+
+
+else if (command === "!tbhelp") {
+    client.say(channel, `User Commands:
+    \`!add {task}\` - Add a new task. |
+    \`!remove {index}\` - Remove a task by its number. |
+    \`!done {index}\` - Mark a task as done. |
+    \`!edit {index} {task}\` - Edit a task's name. |
+    \`!check\` - Check your tasks. |
+    \`!clear\` - Remove all finished tasks for you.`);
+}
+
+
+else if (command === "!tbhelpmod") {
+    client.say(channel, `Moderator & Streamer Commands:
+    \`!clearalldone\` - Remove all finished tasks for everyone. |
+    \`!clearalltasks\` - Clear all tasks for everyone. |
+    \`!cleartasksuser {username}\` - Clear all tasks for a specific user. |
+    \`!removeusertask {username} {index}\` - Remove a specific task from a user.`);
+}
+
+
+
+
+else if (["!clearalltasks", "!cleartasksuser", "!removeusertask"].includes(command)) {
+    if (tags.mod || tags.badges?.broadcaster) { // Check if user is mod or broadcaster
+        if (command === "!clearalltasks") {
+            tasks = {}; // Clear all tasks for everyone
+            client.say(channel, `All tasks cleared.`);
+        } else if (command === "!cleartasksuser" && args.length === 1) {
+            let userToClear = args[0].toLowerCase();
+            if (tasks[userToClear]) {
+                delete tasks[userToClear]; // Clear all tasks for the specified user
+                client.say(channel, `Cleared all tasks for @${userToClear}.`);
+            } else {
+                client.say(channel, `@${userToClear} has no tasks to clear.`);
+            }
+        } else if (command === "!removeusertask" && args.length === 2) {
+            let userToEdit = args[0].toLowerCase();
+            let index = parseInt(args[1]) - 1;
+            if (tasks[userToEdit] && tasks[userToEdit][index]) {
+                tasks[userToEdit].splice(index, 1); // Remove task from the user's list
+                client.say(channel, `Removed task #${index + 1} for @${userToEdit}.`);
+            } else {
+                client.say(channel, `@${username}, no task found at that index for @${userToEdit}.`);
+            }
+        }
+        saveTasks(); // Save changes after clearing or removing tasks
+        updateTaskBoard(); // Ensure the task board is updated after changes
+    } else {
+        client.say(channel, `@${username}, you don't have permission to use this command.`);
+    }
+}
+
+
 else if (command === "!edit" && args.length > 1) {
     // Check if tasks exist for the user
     if (!tasks[username]) {
@@ -233,7 +273,7 @@ else if (command === "!edit" && args.length > 1) {
         return;
     }
 
-    let index = parseInt(args[0]) - 1; // Index of the task to edit (optional)
+    let index = parseInt(args[0]) - 1; // Index of the task to edit
     let newTaskText = args.slice(1).join(" "); // The new task text
 
     // Check if no valid index is provided, find the first non-finished task
@@ -246,13 +286,32 @@ else if (command === "!edit" && args.length > 1) {
         tasks[username][index].text = newTaskText; // Update the task's text
         client.say(channel, `@${username}, edited task #${index + 1} to: ${newTaskText}`);
         saveTasks();
-        updateTaskBoard();
+        updateTaskBoard(); // Update task board after editing
     } else {
         client.say(channel, `@${username}, no valid task found to edit.`);
     }
 } else if (command === "!edit" && args.length <= 1) {
     client.say(channel, `@${username}, please provide a task index and the new task text. Example: !edit {task index} {new task text}`);
 }
+
+
+else if (command === "!check") {
+    if (tasks[username] && tasks[username].length > 0) {
+        const userTasks = tasks[username]
+            .filter(task => !task.finished) // Only show unfinished tasks
+            .map((task, index) => `#${index + 1}: ${task.text} |`)
+            .join("\n");
+
+        if (userTasks.length > 0) {
+            client.say(channel, `@${username}, here are your unfinished tasks:\n${userTasks}`);
+        } else {
+            client.say(channel, `@${username}, you have no unfinished tasks.`);
+        }
+    } else {
+        client.say(channel, `@${username}, you have no tasks.`);
+    }
+}
+
 
 
 });
@@ -285,11 +344,12 @@ window.onload = function () {
 
 let autoScrollInterval; // Store interval reference
 
-
-
 function updateTaskBoard() {
     const taskBoard = document.getElementById("taskBoard");
     const completedCounter = document.getElementById("completedTasks");
+
+    // Reset the scroll position to top when updating task board content
+    taskBoard.scrollTop = 0;  // This ensures it starts from the top initially
 
     // Store the current scroll position before updating
     let scrollPosition = taskBoard.scrollTop;
@@ -305,6 +365,7 @@ function updateTaskBoard() {
     for (let user in tasks) {
         let userSection = document.createElement("div");
         userSection.classList.add("user-section");
+
         let userTitle = document.createElement("h3");
         userTitle.innerText = user;
         userSection.appendChild(userTitle);
@@ -333,6 +394,7 @@ function updateTaskBoard() {
         taskBoard.appendChild(userSection);
     }
 
+    // Update completed tasks counter
     completedCounter.innerHTML = `Completed Tasks:<br>${totalCompleted}/${totalTasks}`;
 
     // Scroll to bottom if user was at bottom before update
@@ -348,14 +410,12 @@ function updateTaskBoard() {
 
 
 
-
-
 function restartAutoScroll() {
     const taskBoardContainer = document.getElementById("taskBoardContainer");
 
-    // Clear any existing interval to prevent stacking multiple intervals
+    // Check if auto scroll interval is already set, do nothing if it is
     if (autoScrollInterval) {
-        clearInterval(autoScrollInterval);
+        return; // Prevent setting a new interval if one is already active
     }
 
     let scrollingDown = true;
@@ -387,5 +447,6 @@ function restartAutoScroll() {
         }
     }
 
+    // Set interval with a fixed speed to prevent speeding up
     autoScrollInterval = setInterval(scroll, 100); // Adjust speed as needed
 }

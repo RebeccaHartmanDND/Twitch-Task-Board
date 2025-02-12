@@ -1,9 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap');
 
 body {
     background-color: transparent; /* Invisible background */
-    font-family: 'Press Start 2P', cursive;
-    color: rgb(0, 0, 0);
+    font-family: 'Open Sans', sans-serif; /* Changed to Open Sans */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -19,13 +18,18 @@ body {
 }
 
 .taskBoardHeader {
+    min-width: 400px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     padding: 10px;
     border-radius: 5px;
-    background: rgb(255, 255, 255); /* More transparent background */
+    color: white;
+    
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 15px;
     margin-bottom: 3px;
+        position: sticky;
 }
 
 #completedTasks {
@@ -34,7 +38,7 @@ body {
     flex: 2;  /* Allow it to take more space within a flex container */
     width: auto;  /* Auto width, let it grow as needed */
     max-width: 400px;  /* Set a max-width to avoid it growing too large */
-    font-size: 10px;
+    font-size: 22px;
     border-radius: 5px;
     word-wrap: break-word;  /* Ensure long text breaks properly */
     text-align: center;  /* Align text to the left */
@@ -44,6 +48,7 @@ body {
 #completedTasks {
     white-space: pre-line;
     line-height: 1.8;  /* Adjust spacing as needed */
+    color: white;
 }
 
 
@@ -56,7 +61,7 @@ br {
     margin-top: 10px;
     flex: 2;
     text-align: right;
-    font-size: 10px;
+    font-size: 22px;
     font-weight: bold;
     white-space: pre-line;
     line-height: 0.7;  /* Adjust spacing as needed */
@@ -69,9 +74,10 @@ br {
 }
 
 #currentCommand {
-    font-size: 10px;
-    color: black;
+    font-size: 22px;
     font-weight: 400px;
+    color: white;
+
 }
 
 
@@ -119,19 +125,21 @@ br {
 
 .user-section h3 {
     font-weight: 400;  /* Regular weight to prevent blurriness */
-    font-size: 14px;
-    background: rgb(255, 255, 255); /* More transparent background */
+    font-size: 22px;
+    color: white;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 15px;
     padding: 5px;
-    border-radius: 5px;
     word-wrap: break-word;
     margin: 0;
 }
 
 .task-item {
-    background: rgb(255, 255, 255); /* More transparent background */
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 15px;
     padding: 5px;
-    border-radius: 5px;
-    font-size: 14px;
+    font-size: 22px;
     font-weight: 400;  /* Lighter weight for clarity */
     word-wrap: break-word;
     margin: 0;
