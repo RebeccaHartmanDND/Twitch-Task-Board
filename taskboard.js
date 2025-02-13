@@ -88,22 +88,43 @@ client.on("message", (channel, tags, message, self) => {
     }
     
     else if (command === "!done") {
-        let index = args.length === 1 ? parseInt(args[0]) - 1 : -1;
-    
+        // Split the args to get all indices passed by the user, trimming extra spaces and mapping to numbers
+        let indices = args.map(arg => parseInt(arg.trim()) - 1).filter(index => !isNaN(index));
+        
         if (tasks[username]) {
-            if (index >= 0 && tasks[username][index]) {
-                // Mark the specified task as finished
-                const taskName = tasks[username][index].text;
-                tasks[username][index].finished = true;
-                tasks[username][index].current = false;  // Remove current status when marking done
-                client.say(channel, `@${username}, marked task: "${taskName}" as finished.`);
+            if (indices.length > 0) {
+                let markedTasks = [];
+                let invalidIndices = [];
+    
+                // Loop through the indices to mark the tasks as finished
+                indices.forEach(index => {
+                    if (tasks[username][index]) {
+                        const taskName = tasks[username][index].text;
+                        tasks[username][index].finished = true;
+                        tasks[username][index].current = false; // Remove current status when marking done
+                        markedTasks.push(`"${taskName}"`);
+                    } else {
+                        invalidIndices.push(index + 1); // Store invalid indices (1-based for user)
+                    }
+                });
+    
+                // If tasks were successfully marked
+                if (markedTasks.length > 0) {
+                    client.say(channel, `@${username}, marked tasks as finished: ${markedTasks.join(", ")}`);
+                }
+    
+                // Handle invalid indices
+                if (invalidIndices.length > 0) {
+                    client.say(channel, `@${username}, invalid task numbers: ${invalidIndices.join(", ")}.`);
+                }
             } else {
+                // If no valid indices are provided, find and mark the first unfinished task as done
                 let foundUnfinishedTask = false;
                 for (let i = 0; i < tasks[username].length; i++) {
                     if (!tasks[username][i].finished) {
                         const taskName = tasks[username][i].text;
                         tasks[username][i].finished = true;
-                        tasks[username][i].current = false;  // Remove current status when marking done
+                        tasks[username][i].current = false; // Remove current status when marking done
                         client.say(channel, `@${username}, marked your first unfinished task: "${taskName}" as finished.`);
                         foundUnfinishedTask = true;
                         break;
@@ -115,7 +136,7 @@ client.on("message", (channel, tags, message, self) => {
                 }
             }
     
-            // After marking a task as done, set the first unfinished task as the current one
+            // After marking tasks as done, set the first unfinished task as the current one
             const nextTask = tasks[username].find(task => !task.finished);
             if (nextTask) {
                 nextTask.current = true;
@@ -127,6 +148,7 @@ client.on("message", (channel, tags, message, self) => {
             client.say(channel, `@${username}, you have no tasks to mark as finished.`);
         }
     }
+    
     
     
 
@@ -229,13 +251,13 @@ else if (command === "!tbhelpmod") {
     \`!clearalldone\` - Remove all finished tasks for everyone. |
     \`!clearalltasks\` - Clear all tasks for everyone. |
     \`!cleartasksuser {username}\` - Clear all tasks for a specific user. |
-    \`!removeusertask {username} {index}\` - Remove a specific task from a user.`);
+    \`!removetaskuser {username} {index}\` - Remove a specific task from a user.`);
 }
 
 
 
 
-else if (["!clearalltasks", "!cleartasksuser", "!removeusertask"].includes(command)) {
+else if (["!clearalltasks", "!cleartasksuser", "!removetaskuser"].includes(command)) {
     if (tags.mod || tags.badges?.broadcaster) { // Check if user is mod or broadcaster
         if (command === "!clearalltasks") {
             tasks = {}; // Clear all tasks for everyone
@@ -297,9 +319,10 @@ else if (command === "!edit" && args.length > 1) {
 
 else if (command === "!check") {
     if (tasks[username] && tasks[username].length > 0) {
-        const userTasks = tasks[username]
-            .filter(task => !task.finished) // Only show unfinished tasks
-            .map((task, index) => `#${index + 1}: ${task.text} |`)
+        let userTasks = tasks[username]
+            .map((task, index) => ({ index: index + 1, text: task.text, finished: task.finished })) // Preserve original index
+            .filter(task => !task.finished) // Only unfinished tasks
+            .map(task => `#${task.index}: ${task.text} |`)
             .join("\n");
 
         if (userTasks.length > 0) {
